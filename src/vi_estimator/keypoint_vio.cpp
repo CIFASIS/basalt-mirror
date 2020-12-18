@@ -110,6 +110,13 @@ KeypointVioEstimator::KeypointVioEstimator(
   vision_data_queue.set_capacity(10);
   imu_data_queue.set_capacity(300);
 
+#ifdef SAVE_TIMES
+  f_track_times_.open("tracking_times_end.txt");
+  f_track_times_ << std::fixed;
+  f_track_times_ << std::setprecision(6);
+  num_tracked_frames_ = 0;
+#endif
+
   if (config.vio_debug_bad_data) {
     imu_stamps.open("/tmp/imu_stamps.txt", std::ofstream::out);
     image_stamps.open("/tmp/image_stamps.txt", std::ofstream::out);
@@ -459,7 +466,11 @@ bool KeypointVioEstimator::measure(const OpticalFlowResult::Ptr& opt_flow_meas,
 
   optimize();
   marginalize(num_points_connected);
-
+#ifdef SAVE_TIMES
+  num_tracked_frames_++;
+  auto const t = std::chrono::system_clock::now().time_since_epoch().count();
+  f_track_times_ << num_tracked_frames_ << " " << t / 1e09 << std::endl;
+#endif
   if (out_state_queue) {
     PoseVelBiasStateWithLin p = frame_states.at(last_state_t_ns);
 

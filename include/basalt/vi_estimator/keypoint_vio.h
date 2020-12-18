@@ -75,7 +75,12 @@ class KeypointVioEstimator : public VioEstimatorBase,
 
   void initialize(const Eigen::Vector3d& bg, const Eigen::Vector3d& ba);
 
-  virtual ~KeypointVioEstimator() { processing_thread->join(); }
+  virtual ~KeypointVioEstimator() {
+    processing_thread->join();
+#ifdef SAVE_TIMES
+    f_track_times_.close();
+#endif
+  }
 
   void addIMUToQueue(const ImuData::Ptr& data);
   void addVisionToQueue(const OpticalFlowResult::Ptr& data);
@@ -223,5 +228,9 @@ class KeypointVioEstimator : public VioEstimatorBase,
   int64_t msckf_kf_id;
 
   std::shared_ptr<std::thread> processing_thread;
+#ifdef SAVE_TIMES
+  std::ofstream f_track_times_;
+  int num_tracked_frames_;
+#endif
 };
 }  // namespace basalt
